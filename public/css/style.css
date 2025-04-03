@@ -21,6 +21,21 @@ body {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+.title {
+    font-family: 'Lilita One', monospace;
+    color: rgb(0, 0, 0);
+    font-size: 2rem;
+}
+
+.welcome-banner {
+    background-color: #210e57;
+    width: 100%;
+    height: auto;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+}
+
 .form-container {
     background-color: #f2f2f2;
     position: relative;

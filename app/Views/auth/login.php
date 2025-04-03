@@ -27,7 +27,7 @@
 
     <!-- /* Login and Register Forms */ -->
         <div class="login-section d-flex flex-column justify-content-center align-items-center">
-            <h2 class="text-center mb-4">Entre com seus dados</h2>
+            <h2 class="text-center title mb-4">Entre com seus dados</h2>
 
             <?php if (isset($validation)) : ?>
                 <div class="alert alert-danger"><?= $validation->listErrors() ?></div>
