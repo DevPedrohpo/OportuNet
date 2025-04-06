@@ -12,6 +12,15 @@ class HomeController extends BaseController
         $usuario = [
             'nome' => 'Nome do Usuário',
             'email' => 'email@exemplo.com',
+            'cpf' => '123.456.789-00',
+            'data_nascimento' => '1990-01-01',
+            'sexo' => 'Masculino',
+            'estado_civil' => 'Solteiro',
+            'escolaridade' => 'Superior Completo',
+            'cursos_especializacoes' => 'Cursos...',
+            'experiencia_profissional' => 'Experiência...',
+            'pretensao_salarial' => 3000.00,
+            'caminho_cv' => 'arquivo.pdf',
         ];
 
         // Carregar a view home.php e passar os dados do usuário
@@ -20,20 +29,17 @@ class HomeController extends BaseController
 
     public function salvarCurriculo()
     {
-        // Processar o upload da foto de perfil (opcional)
-        $fotoPerfil = $this->request->getFile('foto_perfil');
-        $nomeFotoPerfil = null;
-
-        if ($fotoPerfil && $fotoPerfil->isValid() && !$fotoPerfil->hasMoved()) {
-            $nomeFotoPerfil = $fotoPerfil->getRandomName();
-            $fotoPerfil->move(WRITEPATH . 'uploads', $nomeFotoPerfil);
-        }
-
         // Processar os dados do formulário de informações do currículo
         $nome = $this->request->getPost('nome');
         $email = $this->request->getPost('email');
-        $telefone = $this->request->getPost('telefone');
-        $endereco = $this->request->getPost('endereco');
+        $cpf = $this->request->getPost('cpf');
+        $dataNascimento = $this->request->getPost('data_nascimento');
+        $sexo = $this->request->getPost('sexo');
+        $estadoCivil = $this->request->getPost('estado_civil');
+        $escolaridade = $this->request->getPost('escolaridade');
+        $cursosEspecializacoes = $this->request->getPost('cursos_especializacoes');
+        $experienciaProfissional = $this->request->getPost('experiencia_profissional');
+        $pretensaoSalarial = $this->request->getPost('pretensao_salarial');
 
         // Salvar os dados no banco de dados (exemplo)
         // ...
@@ -69,18 +75,6 @@ class HomeController extends BaseController
         $arquivoCv = $this->request->getPost('arquivo_cv');
         if ($arquivoCv && file_exists(WRITEPATH . 'uploads/' . $arquivoCv)) {
             unlink(WRITEPATH . 'uploads/' . $arquivoCv);
-            // Atualizar o banco de dados para remover a referência ao arquivo
-            // ...
-        }
-        return redirect()->to('/home');
-    }
-
-    public function removerFotoPerfil()
-    {
-        // Exemplo de lógica para remover a foto de perfil
-        $fotoPerfil = $this->request->getPost('foto_perfil');
-        if ($fotoPerfil && file_exists(WRITEPATH . 'uploads/' . $fotoPerfil)) {
-            unlink(WRITEPATH . 'uploads/' . $fotoPerfil);
             // Atualizar o banco de dados para remover a referência ao arquivo
             // ...
         }

@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Tint&family=Lilita+One&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body class="d-flex align-items-center justify-content-center">
+    <div id="alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; width: 300px;"></div>
     
     <!-- /* main container */ -->
     <div class="form-container d-flex flex-column flex-md-row rounded shadow-lg">
@@ -37,16 +38,20 @@
                 <div class="alert alert-danger"><?= $error ?></div>
             <?php endif; ?>
 
-            <form action="<?= base_url('/') ?>" method="post" class="w-100 px-3">
-                
+            <?php if (isset($message)) : ?>
+                <div class="alert alert-danger"><?= $message ?></div>
+            <?php endif; ?>
+
+            <form action="<?= base_url('/auth/login') ?>" method="post" class="w-100 px-3">
+            <input type="hidden" name="form_type" value="login">            
                 <div class="form-group">
                     <label for="email">E-mail</label>
-                    <input type="email" name="email" id="email" class="form-control" value="<?= set_value('email') ?>" required>
+                    <input type="email" name="email_login" id="email_login" class="form-control" value="<?= set_value('email') ?>" required>
                 </div>
                 <div class="form-group">
                 <label for="senha">Senha</label>
                     <div class="position-relative">
-                        <input type="password" name="senha" id="senha" class="form-control pr-5" required>
+                        <input type="password" name="senha_login" id="senha_login" class="form-control pr-5" required>
                         <span class="position-absolute toggle-password" style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer;">
                             <img src="/icons/eye-closed.svg" class="eye-icon" style="width: 20px; height: 20px;">
                         </span>
@@ -62,15 +67,24 @@
         <!-- /* Register Section */ -->
         <div class="register-section d-flex flex-column justify-content-center align-items-center">
             <h2 class="text-center mb-4">Crie sua conta</h2>
-            <form action="<?= base_url('auth/register') ?>" method="post" class="w-100 px-3">
 
+            <?php if (isset($success)) : ?>
+                <div class="alert alert-success"><?= $success ?></div>
+            <?php endif; ?>
+
+            <?php if (isset($error)) : ?>
+                <div class="alert alert-danger"><?= $error ?></div>
+            <?php endif; ?>
+
+            <form action="<?= base_url('/auth/register') ?>" method="post" class="w-100 px-3" id="registerForm">
+            <input type="hidden" name="form_type" value="register">
             <div class="form-group text-center">
                     <div class="role-container position-relative d-flex justify-content-center align-items-center">
                         <div class="role-square position-absolute"></div>
                         <span class="role-option admin-option">Admin</span>
                         <span class="role-option candidate-option">Candidato</span>
                     </div>
-                    <input type="hidden" id="roleInput" name="role" value="admin">
+                    <input type="hidden" id="roleInput" name="tipo_conta" value="admin">
                 </div>
 
                 <div class="form-group">
@@ -79,17 +93,21 @@
                 </div>
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" name="email" id="email" class="form-control" required>
+                    <input type="email" name="email_cadastro" id="email_cadastro" class="form-control" required>
                 </div>
                 <div class="form-group">
-                <label for="senha">Senha</label>
-                    <div class="position-relative">
-                        <input type="password" name="senha" id="senha" class="form-control pr-5" required>
-                        <span class="position-absolute toggle-password" style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer;">
-                            <img src="/icons/eye-closed.svg" class="eye-icon" style="width: 20px; height: 20px;">
-                        </span>
-                    </div>
+                    <label for="email">CPF</label>
+                    <input type="text" name="cpf_cadastro" id="cpf_cadastro" class="form-control" required>
                 </div>
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                        <div class="position-relative">
+                            <input type="password" name="senha_cadastro" id="senha_cadastro" class="form-control pr-5" required>
+                            <span class="position-absolute toggle-password" style="top: 50%; right: 10px; transform: translateY(-50%); cursor: pointer;">
+                                <img src="/icons/eye-closed.svg" class="eye-icon" style="width: 20px; height: 20px;">
+                            </span>
+                        </div>
+                    </div>
                 <button type="submit" class="btn btn-primary btn-block">Cadastrar</button>
             </form>
             <p class="mt-3 text-center">Já tem uma conta? <a href="#" id="login-link">Entrar</a></p>
@@ -109,7 +127,7 @@
         const squareText = document.querySelector('.square h1.welcome-title .highlight');
 
         function changeTextWithFade(newText) {
-            if (window.innerWidth > 768) { // Only apply text change for larger screens
+            if (window.innerWidth > 768) {
                 squareText.classList.add('fade-out');
                 setTimeout(() => {
                     squareText.textContent = newText;
@@ -144,7 +162,7 @@
 
         document.querySelectorAll('.toggle-password').forEach(item => {
             item.addEventListener('click', function () {
-                const input = this.previousElementSibling; // Corrigido para pegar o input corretamente
+                const input = this.previousElementSibling;
                 const icon = this.querySelector('img');
                 if (input.type === 'password') {
                     input.type = 'text';
@@ -164,7 +182,7 @@
         document.querySelector('.role-container').addEventListener('click', () => {
             if (roleInput.value === 'admin') {
                 roleSquare.style.transform = 'translateX(100%)'; // Move para a direita
-                roleInput.value = 'candidate';
+                roleInput.value = 'candidato';
                 adminOption.style.color = '#000';
                 candidateOption.style.color = '#fff';
             } else {
@@ -174,6 +192,75 @@
                 candidateOption.style.color = '#000';
             }
         });
+
+        // Limpar os campos do formulário após o cadastro bem-sucedido
+        <?php if (isset($success)) : ?>
+            document.getElementById('registerForm').reset();
+        <?php endif; ?>
+
+        // Adicionar evento de submit ao formulário de registro
+        document.getElementById('registerForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const form = this;
+            const formData = new FormData(form);
+
+            fetch("<?= base_url('/auth/register') ?>", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                showAlert(data.message, data.success ? 'success' : 'danger');
+
+                if (data.success) {
+                    form.reset();
+                }
+            })
+            .catch(error => {
+                showAlert("Erro no servidor. Tente novamente.", 'danger');
+                console.error(error);
+            });
+        });
+
+        // Função para mostrar alertas
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = ''; // Limpa mensagens anteriores
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.role = 'alert';
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            `;
+            alertContainer.appendChild(alert);
+
+            setTimeout(() => {
+                alert.classList.remove('show');
+                alert.classList.add('hide');
+                alert.addEventListener('transitionend', () => alert.remove());
+            }, 4000);
+        }
+
+        // Add CPF mask
+        const cpfInput = document.getElementById('cpf_cadastro');
+        cpfInput.addEventListener('input', () => {
+            let value = cpfInput.value.replace(/\D/g, ''); // Não pode conter caracteres não numéricos
+            value = value.substring(0, 11); // Limite de 11 dígitos
+            value = value.replace(/(\d{3})(\d)/, '$1.$2'); // Primeiro ponto
+            value = value.replace(/(\d{3})(\d)/, '$1.$2'); // Segundo ponto
+            value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2'); // Traço
+            cpfInput.value = value;
+        });
+
+        // Prevent non-numeric input
+        cpfInput.addEventListener('keypress', (e) => {
+            if (!/[0-9]/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
+
     </script>
     <!-- /* End of Animations */ -->
 
