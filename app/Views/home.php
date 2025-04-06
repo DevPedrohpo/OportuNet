@@ -19,21 +19,57 @@
                     <div class="col-md-6">
                         <h2 class="title">Informações do Currículo</h2>
                         <form action="<?= base_url('home/salvar_curriculo') ?>" method="post">
-                            <div class="form-group">
-                                <label for="nome">Nome Completo</label>
-                                <input type="text" name="nome" id="nome" class="form-control" value="<?= $usuario['nome'] ?>" required>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="nome">Nome Completo</label>
+                                    <input type="text" name="nome" id="nome" class="form-control" value="<?= $usuario['nome'] ?>" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="email">Email</label>
+                                    <input type="email" name="email" id="email" class="form-control" value="<?= $usuario['email'] ?>" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="cpf">CPF</label>
+                                    <input type="text" name="cpf" id="cpf" class="form-control" value="<?= $usuario['cpf'] ?>">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="data_nascimento">Data de Nascimento</label>
+                                    <input type="date" name="data_nascimento" id="data_nascimento" class="form-control" value="<?= $usuario['data_nascimento'] ?>">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="sexo">Sexo</label>
+                                    <select name="sexo" id="sexo" class="form-control">
+                                        <option value="Masculino" <?= ($usuario['sexo'] == 'Masculino') ? 'selected' : '' ?>>Masculino</option>
+                                        <option value="Feminino" <?= ($usuario['sexo'] == 'Feminino') ? 'selected' : '' ?>>Feminino</option>
+                                        <option value="Outro" <?= ($usuario['sexo'] == 'Outro') ? 'selected' : '' ?>>Outro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="estado_civil">Estado Civil</label>
+                                    <input type="text" name="estado_civil" id="estado_civil" class="form-control" value="<?= $usuario['estado_civil'] ?>">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="escolaridade">Escolaridade</label>
+                                    <input type="text" name="escolaridade" id="escolaridade" class="form-control" value="<?= $usuario['escolaridade'] ?>">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="pretensao_salarial">Pretensão Salarial</label>
+                                    <input type="number" name="pretensao_salarial" id="pretensao_salarial" class="form-control" value="<?= $usuario['pretensao_salarial'] ?>">
+                                </div>
                             </div>
                             <div class="form-group">
-                                <label for="email">Email</label>
-                                <input type="email" name="email" id="email" class="form-control" value="<?= $usuario['email'] ?>" required>
+                                <label for="cursos_especializacoes">Cursos/Especializações</label>
+                                <textarea name="cursos_especializacoes" id="cursos_especializacoes" class="form-control"><?= $usuario['cursos_especializacoes'] ?></textarea>
                             </div>
                             <div class="form-group">
-                                <label for="telefone">Telefone</label>
-                                <input type="text" name="telefone" id="telefone" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="endereco">Endereço</label>
-                                <input type="text" name="endereco" id="endereco" class="form-control">
+                                <label for="experiencia_profissional">Experiência Profissional</label>
+                                <textarea name="experiencia_profissional" id="experiencia_profissional" class="form-control"><?= $usuario['experiencia_profissional'] ?></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary btn-sm">Salvar Currículo</button>
                             <button type="submit" class="btn btn-secondary btn-sm">Editar Currículo</button>
@@ -44,30 +80,14 @@
                         <h2 class="title">Upload de arquivos</h2>
                         <form action="<?= base_url('home/upload_cv') ?>" method="post" enctype="multipart/form-data">
                             <div class="form-group">
-                                <label for="arquivo_cv">Curriculo (PDF ou TXT)</label>
+                                <label for="arquivo_cv">Currículo (PDF ou TXT)</label>
                                 <input type="file" name="arquivo_cv" id="arquivo_cv" class="form-control-file" accept=".pdf,.txt" required>
-                                <div id="preview-arquivo-cv">
-                                    <?php if (!empty($usuario['arquivo_cv'])) : ?>
-                                        <p class="mt-2">Arquivo: <?= $usuario['arquivo_cv'] ?></p>
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="removerArquivoCv()">Remover Arquivo</button>
-                                    <?php else : ?>
-                                        <p class="mt-2 text-muted">Nenhum arquivo enviado.</p>
-                                    <?php endif; ?>
-                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="arquivo_carta">Carta de Apresentação (PDF ou TXT)</label>
+                                <input type="file" name="arquivo_carta" id="arquivo_carta" class="form-control-file" accept=".pdf,.txt">
                             </div>
                         </form>
-                        <div class="form-group">
-                            <label for="foto_perfil">Foto de Perfil (opcional)</label>
-                            <input type="file" name="foto_perfil" id="foto_perfil" class="form-control-file" accept="image/*">
-                            <div id="preview-foto-perfil">
-                                <?php if (!empty($usuario['foto_perfil'])) : ?>
-                                    <p class="mt-2">Foto: <?= $usuario['foto_perfil'] ?></p>
-                                    <button type="button" class="btn btn-danger btn-sm" onclick="removerFotoPerfil()">Remover Foto</button>
-                                <?php else : ?>
-                                    <p class="mt-2 text-muted">Nenhuma foto enviada.</p>
-                                <?php endif; ?>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -78,17 +98,8 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
         function removerArquivoCv() {
-            // Lógica para remover o arquivo de currículo
             alert('Arquivo de currículo removido!');
-            // Aqui você pode adicionar uma requisição AJAX para remover o arquivo no servidor
             document.getElementById('preview-arquivo-cv').innerHTML = '<p class="mt-2 text-muted">Nenhum arquivo enviado.</p>';
-        }
-
-        function removerFotoPerfil() {
-            // Lógica para remover a foto de perfil
-            alert('Foto de perfil removida!');
-            // Aqui você pode adicionar uma requisição AJAX para remover o arquivo no servidor
-            document.getElementById('preview-foto-perfil').innerHTML = '<p class="mt-2 text-muted">Nenhuma foto enviada.</p>';
         }
     </script>
 </body>
