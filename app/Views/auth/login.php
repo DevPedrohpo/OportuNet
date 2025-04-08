@@ -11,7 +11,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Tint&family=Lilita+One&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body class="d-flex align-items-center justify-content-center">
-    <div id="alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; width: 300px;"></div>
+    <div id="alert-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; width: 300px;">
+    <?php if (session()->getFlashdata('erro')): ?>
+        <div class="alert alert-danger">
+            <?= session()->getFlashdata('erro') ?>
+        </div>
+    <?php endif; ?>
+    </div>
     
     <!-- /* main container */ -->
     <div class="form-container d-flex flex-column flex-md-row rounded shadow-lg">
@@ -42,7 +48,7 @@
                 <div class="alert alert-danger"><?= $message ?></div>
             <?php endif; ?>
 
-            <form action="<?= base_url('/auth/login') ?>" method="post" class="w-100 px-3">
+            <form action="<?= base_url('/auth/login') ?>" method="post" class="w-100 px-3" id="loginForm">
             <input type="hidden" name="form_type" value="login">            
                 <div class="form-group">
                     <label for="email">E-mail</label>
@@ -81,10 +87,10 @@
             <div class="form-group text-center">
                     <div class="role-container position-relative d-flex justify-content-center align-items-center">
                         <div class="role-square position-absolute"></div>
-                        <span class="role-option admin-option">Admin</span>
+                        <span class="role-option admin-option">Administrador</span>
                         <span class="role-option candidate-option">Candidato</span>
                     </div>
-                    <input type="hidden" id="roleInput" name="tipo_conta" value="admin">
+                    <input type="hidden" id="roleInput" name="tipo_conta" value="Administrador">
                 </div>
 
                 <div class="form-group">
@@ -180,14 +186,14 @@
         const candidateOption = document.querySelector('.candidate-option');
 
         document.querySelector('.role-container').addEventListener('click', () => {
-            if (roleInput.value === 'admin') {
+            if (roleInput.value === 'Administrador') {
                 roleSquare.style.transform = 'translateX(100%)'; // Move para a direita
-                roleInput.value = 'candidato';
+                roleInput.value = 'Candidato';
                 adminOption.style.color = '#000';
                 candidateOption.style.color = '#fff';
             } else {
                 roleSquare.style.transform = 'translateX(0)'; // Move para a esquerda
-                roleInput.value = 'admin';
+                roleInput.value = 'Administrador';
                 adminOption.style.color = '#fff';
                 candidateOption.style.color = '#000';
             }
@@ -226,7 +232,7 @@
         // Função para mostrar alertas
         function showAlert(message, type = 'success') {
             const alertContainer = document.getElementById('alert-container');
-            alertContainer.innerHTML = ''; // Limpa mensagens anteriores
+            alertContainer.innerHTML = '';
             const alert = document.createElement('div');
             alert.className = `alert alert-${type} alert-dismissible fade show`;
             alert.role = 'alert';
@@ -240,7 +246,7 @@
                 alert.classList.remove('show');
                 alert.classList.add('hide');
                 alert.addEventListener('transitionend', () => alert.remove());
-            }, 4000);
+            }, 1500);
         }
 
         // Add CPF mask
@@ -259,6 +265,31 @@
             if (!/[0-9]/.test(e.key)) {
                 e.preventDefault();
             }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const form = this;
+            const formData = new FormData(form);
+
+            fetch("<?= base_url('/auth/login') ?>", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+
+                if (data.success) {
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    });
+                }
+            })
+            .catch(error => {
+                showAlert("Erro no login. Tente novamente.", 'danger');
+                console.error(error);
+            });
         });
 
     </script>

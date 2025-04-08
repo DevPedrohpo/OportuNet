@@ -2,41 +2,61 @@
 
 namespace App\Controllers;
 
+use App\Models\UserModel;
+
 class AuthController extends BaseController
 {
     public function index()
     {
-        helper(['form']); // Carrega o helper 'form'
+        helper(['form']);
         return view('auth/login');
     }
 
     public function login()
     {
-        // Lógica de login
-        $data = [];
         helper(['form']);
 
-        if ($this->request->getMethod() == 'post') {
-            $email = $this->request->getVar('email_login');
-            $senha = $this->request->getVar('senha_login');
+        $email = $this->request->getPost('email_login');
+        $senha = $this->request->getPost('senha_login');
 
-            $usuarioModel = new \App\Models\UserModels();
-            $usuario = $usuarioModel->where('email_login', $email)->first();
+        $usuarioModel = new UserModel();
+        $usuario = $usuarioModel->where('email', $email)->first();
 
-            if ($usuario) {
-                if (password_verify($senha, $usuario['senha_login'])) {
-                    $session = session();
-                    $session->set('usuario_id', $usuario['id']);
-                    return redirect()->to('/home'); // Redireciona para a página inicial
-                } else {
-                    $data['error'] = 'Senha incorreta.';
-                }
-            } else {
-                $data['error'] = 'Email não encontrado.';
-            }
+        if (!$usuario) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'E-mail não encontrado.'
+            ]);
         }
 
-        return view('auth/login', $data);
+        if (!password_verify($senha, $usuario['senha'])) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Senha incorreta.'
+            ]);
+        }
+
+        // Salva sessão com o tipo correto
+        session()->set([
+            'usuario_id'   => $usuario['id'],
+            'usuario_nome' => $usuario['nome'],
+            'tipo_conta'   => $usuario['tipo_conta'],
+            'logado'       => true
+        ]);
+
+        // Redirecionamento baseado no tipo de conta
+        if ($usuario['tipo_conta'] === 'Administrador') {
+            return $this->response->setJSON([
+                'success' => true,
+                'redirect' => base_url('admin')
+            ]);
+        } else {
+            $idCriptografado = base64_encode($usuario['id']);
+            return $this->response->setJSON([
+                'success' => true,
+                'redirect' => base_url('home?id=' . $idCriptografado)
+            ]);
+        }
     }
 
     public function register()
@@ -46,7 +66,7 @@ class AuthController extends BaseController
         $data = [
             'nome' => $this->request->getPost('nome'),
             'email' => $this->request->getPost('email_cadastro'),
-            'cpf' => preg_replace('/\D/', '', $this->request->getPost('cpf_cadastro')), // Remove a mascara do CPF
+            'cpf' => preg_replace('/\D/', '', $this->request->getPost('cpf_cadastro')),
             'senha' => $this->request->getPost('senha_cadastro'),
             'tipo_conta' => $this->request->getPost('tipo_conta'),
         ];
@@ -54,18 +74,14 @@ class AuthController extends BaseController
         $rules = [
             'nome' => 'required',
             'email' => [
-                    'rules' => 'required|valid_email|is_unique[usuarios.email]',
-                    'errors' => [
-                        'is_unique'   => 'Este email já está cadastrado.'
-                    ]
-                ],
+                'rules' => 'required|valid_email|is_unique[usuarios_login.email]',
+                'errors' => ['is_unique' => 'Este email já está cadastrado.']
+            ],
             'senha' => 'required|min_length[6]',
-            'tipo_conta' => 'required|in_list[admin,candidato]',
+            'tipo_conta' => 'required|in_list[Administrador, Candidato]',
             'cpf' => [
-                'rules' => 'required|exact_length[11]|is_unique[usuarios.cpf]',
-                'errors' => [
-                    'is_unique'   => 'Este CPF já está cadastrado.'
-                ]
+                'rules' => 'required|exact_length[11]|is_unique[usuarios_login.cpf]',
+                'errors' => ['is_unique' => 'Este CPF já está cadastrado.']
             ],
         ];
 
@@ -76,14 +92,14 @@ class AuthController extends BaseController
             ]);
         }
 
-        // Salvar usuário
-        $usuarioModel = new \App\Models\UserModels();
+        // Salva no banco
+        $usuarioModel = new UserModel();
         $usuarioModel->save([
             'nome' => $data['nome'],
             'email' => $data['email'],
-            'cpf' => $data['cpf'], // Salva apenas numeros do CPF
+            'cpf' => $data['cpf'],
             'senha' => password_hash($data['senha'], PASSWORD_DEFAULT),
-            'role'  => $data['tipo_conta'] == 'admin' ? 1 : 0
+            'tipo_conta' => $data['tipo_conta']
         ]);
 
         return $this->response->setJSON([
@@ -92,5 +108,9 @@ class AuthController extends BaseController
         ]);
     }
 
-
+    public function logout()
+    {
+        session()->destroy();
+        return redirect()->to('/')->with('success', 'Logout realizado com sucesso!');
+    }
 }

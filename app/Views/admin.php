@@ -11,6 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Tint&family=Lilita+One&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body class="d-flex align-items-center justify-content-center">
+    <div style="position: fixed; top: 10px; right: 10px; z-index: 1000;">
+        <a href="<?= base_url('logout') ?>" class="btn btn-danger btn-sm">Logout</a>
+    </div>
     <div class="container mt-5">
         <div class="card shadow">
             <div class="card-body">
@@ -25,40 +28,31 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>João da Silva</td>
-                            <td>joao@email.com</td>
-                            <td style="color: green;">R$ 3.000,00</td>
-                            <td><a href="/cvs/joao_da_silva.pdf" class="btn btn-primary btn-sm" download>Baixar CV</a></td>
-                        </tr>
-                        <tr>
-                            <td>Maria Oliveira</td>
-                            <td>maria@email.com</td>
-                            <td style="color: blue;">R$ 5.000,00</td>
-                            <td><a href="/cvs/maria_oliveira.pdf" class="btn btn-primary btn-sm" download>Baixar CV</a></td>
-                        </tr>
-                        <tr>
-                            <td>Carlos Pereira</td>
-                            <td>carlos@email.com</td>
-                            <td style="color: green;">R$ 2.500,00</td>
-                            <td><a href="/cvs/carlos_pereira.pdf" class="btn btn-primary btn-sm" download>Baixar CV</a></td>
-                        </tr>
-                        <tr>
-                            <td>Ana Souza</td>
-                            <td>ana@email.com</td>
-                            <td style="color: blue;">R$ 4.000,00</td>
-                            <td><a href="/cvs/ana_souza.pdf" class="btn btn-primary btn-sm" download>Baixar CV</a></td>
-                        </tr>
+                        <?php foreach ($usuarios as $usuario): ?>
+                            <tr>
+                                <td><?= esc($usuario['nome']) ?></td>
+                                <td><?= esc($usuario['email']) ?></td>
+                                <td style="color: <?= $usuario['pretensao_salarial'] >= 4000 ? 'blue' : 'green' ?>;">
+                                    R$ <?= number_format($usuario['pretensao_salarial'], 2, ',', '.') ?>
+                                </td>
+                                <td>
+                                    <a href="<?= base_url('cvs/' . basename($usuario['caminho_cv'])) ?>" class="btn btn-primary btn-sm">
+                                        Baixar CV
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
+                <?php
+                    $total = array_sum(array_column($usuarios, 'pretensao_salarial'));
+                    $media = count($usuarios) ? $total / count($usuarios) : 0;
+                ?>
+
                 <div class="mt-4">
                     <h2 class="title">Relatório de Pretensão Salarial</h2>
-                    <p><strong>Soma Total:</strong> R$ 14.500,00</p>
-                    <p><strong>Média Salarial:</strong> R$ 3.625,00</p>
-                    <div class="mt-3">
-                        <a href="/export/report.csv" class="btn btn-primary btn-sm">Exportar como CSV</a>
-                        <a href="/export/report.pdf" class="btn btn-primary btn-sm">Exportar como PDF</a>
-                    </div>
+                    <p><strong>Soma Total:</strong> R$ <?= number_format($total, 2, ',', '.') ?></p>
+                    <p><strong>Média Salarial:</strong> R$ <?= number_format($media, 2, ',', '.') ?></p>
                 </div>
             </div>
         </div>
