@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CriarTabelaUsuario extends Migration
+class CriarTabelaUsuariosDetalhes extends Migration
 {
     public function up()
     {
@@ -15,27 +15,13 @@ class CriarTabelaUsuario extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'nome' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 255,
-            ],
-            'email' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 255,
-                'unique'     => true,
-            ],
-            'senha' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 255,
-            ],
-            'cpf' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 14,
-                'unique'     => true,
+            'user_id' => [
+                'type'       => 'INT',
+                'unsigned'   => true,
             ],
             'data_nascimento' => [
-                'type'       => 'DATE',
-                'null'       => true,
+                'type' => 'DATE',
+                'null' => true,
             ],
             'sexo' => [
                 'type'       => 'ENUM',
@@ -53,30 +39,21 @@ class CriarTabelaUsuario extends Migration
                 'null'       => true,
             ],
             'cursos_especializacoes' => [
-                'type'       => 'TEXT',
-                'null'       => true,
+                'type' => 'TEXT',
+                'null' => true,
             ],
             'experiencia_profissional' => [
-                'type'       => 'TEXT',
-                'null'       => true,
+                'type' => 'TEXT',
+                'null' => true,
             ],
             'pretensao_salarial' => [
                 'type'       => 'DECIMAL',
                 'constraint' => '10,2',
                 'null'       => true,
             ],
-            'tipo_conta' => [
-                'type'       => 'ENUM',
-                'constraint' => ['Candidato', 'Administrador'],
-                'default'    => 'Candidato',
-            ],
             'caminho_cv' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
-                'null'       => true,
-            ],
-            'data_hora_cv' => [
-                'type'       => 'DATETIME',
                 'null'       => true,
             ],
             'created_at' => [
@@ -93,11 +70,12 @@ class CriarTabelaUsuario extends Migration
             ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->createTable('usuarios');
+        $this->forge->addForeignKey('user_id', 'usuarios_login', 'id', 'CASCADE', 'CASCADE');
+        $this->forge->createTable('usuarios_detalhes');
     }
 
     public function down()
     {
-        $this->forge->dropTable('usuarios');
+        $this->forge->dropTable('usuarios_detalhes');
     }
 }

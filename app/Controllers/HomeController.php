@@ -3,81 +3,113 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Models\UserDetailsModel;
+use App\Models\UserModel;
 
 class HomeController extends BaseController
 {
     public function index()
-    {
-        // Obter os dados do usuário (exemplo)
-        $usuario = [
-            'nome' => 'Nome do Usuário',
-            'email' => 'email@exemplo.com',
-            'cpf' => '123.456.789-00',
-            'data_nascimento' => '1990-01-01',
-            'sexo' => 'Masculino',
-            'estado_civil' => 'Solteiro',
-            'escolaridade' => 'Superior Completo',
-            'cursos_especializacoes' => 'Cursos...',
-            'experiencia_profissional' => 'Experiência...',
-            'pretensao_salarial' => 3000.00,
-            'caminho_cv' => 'arquivo.pdf',
-        ];
-
-        // Carregar a view home.php e passar os dados do usuário
+    {    
+        $userId = $this->_getUserId();
+    
+        // Verifica se o usuário está logado
+        $loginModel = new UserModel();
+        $dadosLogin = $loginModel->find($userId);
+    
+        if (!$dadosLogin) {
+            return redirect()->to('/auth/login')->with('error', 'Usuário não encontrado.');
+        }
+    
+        // Pegando o model de detalhes do usuário
+        $usuarioModel = new UserDetailsModel();
+        $usuarioDetalhes = $usuarioModel->where('user_id', $userId)->first();
+    
+        // Juntar os dados (com fallback para não dar erro se for nulo)
+        $usuario = array_merge(
+            $dadosLogin ?? [],
+            $usuarioDetalhes ?? []
+        );
+    
         return view('home', ['usuario' => $usuario]);
     }
 
-    public function salvarCurriculo()
+    public function salvar_curriculo()
     {
-        // Processar os dados do formulário de informações do currículo
-        $nome = $this->request->getPost('nome');
-        $email = $this->request->getPost('email');
-        $cpf = $this->request->getPost('cpf');
-        $dataNascimento = $this->request->getPost('data_nascimento');
-        $sexo = $this->request->getPost('sexo');
-        $estadoCivil = $this->request->getPost('estado_civil');
-        $escolaridade = $this->request->getPost('escolaridade');
-        $cursosEspecializacoes = $this->request->getPost('cursos_especializacoes');
-        $experienciaProfissional = $this->request->getPost('experiencia_profissional');
-        $pretensaoSalarial = $this->request->getPost('pretensao_salarial');
+        $userId = $this->_getUserId($this->request->getPost('user_id'));
 
-        // Salvar os dados no banco de dados (exemplo)
-        // ...
+        // Modelos
+        $loginModel = new UserModel();
+        $detalhesModel = new UserDetailsModel();
 
-        // Redirecionar para a tela inicial
-        return redirect()->to('/home');
-    }
+        // Atualiza nome do usuário
+        $loginModel->update($userId, [
+            'nome' => $this->request->getPost('nome')
+        ]);
 
-    public function uploadCv()
-    {
-        // Processar o upload do arquivo do CV
-        $arquivoCv = $this->request->getFile('arquivo_cv');
+        // Processa arquivo do currículo
+        $cv = $this->request->getFile('arquivo_cv');
+        $cvPath = null;
 
-        if ($arquivoCv->isValid() && !$arquivoCv->hasMoved()) {
-            $novoNome = $arquivoCv->getRandomName();
-            $arquivoCv->move(WRITEPATH . 'uploads', $novoNome);
+        if ($cv && $cv->isValid() && !$cv->hasMoved()) {
+            // Obtém o nome original do arquivo
+            $originalName = pathinfo($cv->getClientName(), PATHINFO_BASENAME);
+            
+            // Remove caracteres indesejados e previne injeção de caminhos
+            $sanitizedName = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $originalName);
+            
+            // Adiciona um timestamp para evitar sobrescrição
+            $uniqueName = time() . '_' . $sanitizedName; 
+            $cvPath = 'uploads/' . $uniqueName; 
+            
+            // Move o arquivo para o diretório especificado
+            $cv->move(ROOTPATH . 'public/uploads', $uniqueName);
+        }
 
-            // Salvar o nome do arquivo no banco de dados (exemplo)
-            // ...
+        // Dados do formulário
+        $dados = [
+            'user_id' => $userId,
+            'estado_civil' => $this->request->getPost('estado_civil'),
+            'sexo' => $this->request->getPost('sexo'),
+            'data_nascimento' => $this->request->getPost('data_nascimento'),
+            'escolaridade' => $this->request->getPost('escolaridade'),
+            'pretensao_salarial' => $this->request->getPost('pretensao_salarial'),
+            'cursos_especializacoes' => $this->request->getPost('cursos_especializacoes'),
+            'experiencia_profissional' => $this->request->getPost('experiencia_profissional'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ];
 
-            // Redirecionar para a tela inicial
-            return redirect()->to('/home');
+        if ($cvPath) {
+            $dados['caminho_cv'] = $cvPath; // ← ajustado aqui o nome correto da coluna
+        }
+
+        // Verifica se já existe registro
+        $detalhes = $detalhesModel->where('user_id', $userId)->first();
+
+        if ($detalhes) {
+            $detalhesModel->update($detalhes['id'], $dados);
         } else {
-            // Lidar com erros de upload
-            // ...
-            return redirect()->to('/home');
+            $dados['created_at'] = date('Y-m-d H:i:s');
+            $detalhesModel->insert($dados);
         }
+
+        // Retorna a resposta com o nome do arquivo salvo (se tiver)
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Currículo salvo com sucesso!',
+            'arquivo_cv' => $cvPath
+        ]);
     }
 
-    public function removerArquivoCv()
+    protected function _getUserId($userId = null)
     {
-        // Exemplo de lógica para remover o arquivo de CV
-        $arquivoCv = $this->request->getPost('arquivo_cv');
-        if ($arquivoCv && file_exists(WRITEPATH . 'uploads/' . $arquivoCv)) {
-            unlink(WRITEPATH . 'uploads/' . $arquivoCv);
-            // Atualizar o banco de dados para remover a referência ao arquivo
-            // ...
+        try {
+            if ($userId !== null) {
+                return base64_decode($userId);
+            }
+            return base64_decode($_GET['id']);
+        } catch (\Exception $e) {
+            return redirect()->to('/auth/login')->with('error', 'ID inválido.');
         }
-        return redirect()->to('/home');
     }
+    
 }
